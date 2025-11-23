@@ -1,0 +1,8 @@
+{
+  "id": "P7",
+  "title": "Binary Search",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["binary-search", "arrays"]
+}

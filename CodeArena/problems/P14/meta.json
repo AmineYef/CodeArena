@@ -1,0 +1,8 @@
+{
+  "id": "P14",
+  "title": "Dijkstra Shortest Path",
+  "difficulty": "medium",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["graphs", "dijkstra", "shortest-path"]
+}

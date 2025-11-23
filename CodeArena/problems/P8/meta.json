@@ -1,0 +1,8 @@
+{
+  "id": "P8",
+  "title": "Longest Increasing Subsequence",
+  "difficulty": "medium",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["dp", "binary-search", "lis"]
+}

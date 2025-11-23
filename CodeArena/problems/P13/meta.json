@@ -1,0 +1,8 @@
+{
+  "id": "P13",
+  "title": "Minimum Window Substring",
+  "difficulty": "medium",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["sliding-window", "hash-table", "strings"]
+}

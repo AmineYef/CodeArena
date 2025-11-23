@@ -1,0 +1,8 @@
+{
+  "id": "P16",
+  "title": "Edit Distance",
+  "difficulty": "hard",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["dp", "strings", "levenshtein"]
+}

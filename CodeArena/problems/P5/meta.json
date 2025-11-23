@@ -1,0 +1,8 @@
+{
+  "id": "P5",
+  "title": "Valid Parentheses",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["stack", "strings"]
+}

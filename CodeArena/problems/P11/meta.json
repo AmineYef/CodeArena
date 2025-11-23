@@ -1,0 +1,8 @@
+{
+  "id": "P11",
+  "title": "Valid Sudoku",
+  "difficulty": "medium",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["hash-table", "matrix"]
+}

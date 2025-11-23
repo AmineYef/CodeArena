@@ -1,0 +1,8 @@
+{
+  "id": "P3",
+  "title": "Count Inversions",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["arrays", "sorting", "merge-sort"]
+}

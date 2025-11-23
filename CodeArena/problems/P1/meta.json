@@ -1,0 +1,8 @@
+{
+  "id": "P1",
+  "title": "Two Sum",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["arrays", "hash-table", "two-pointers"]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "P6",
+  "title": "Frequency Sort",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["sorting", "hash-table", "counting"]
+}

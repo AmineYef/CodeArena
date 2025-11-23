@@ -1,0 +1,8 @@
+{
+  "id": "P10",
+  "title": "Kth Largest Element",
+  "difficulty": "medium",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["heap", "quickselect", "sorting"]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "P4",
+  "title": "Missing Number",
+  "difficulty": "easy",
+  "time_limit": 2,
+  "memory_limit": 256,
+  "tags": ["math", "arrays", "bit-manipulation"]
+}
