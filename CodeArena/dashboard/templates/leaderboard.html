@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Contest {{ contest_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <ul class="nav-links">
+                <li><a href="/contests">Contests</a></li>
+                <li><a href="/contest/{{ contest_id }}/leaderboard" class="active">Leaderboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">🏆 Classement - Contest {{ contest_id }}</h1>
+
+        <div class="leaderboard-container">
+            <table class="leaderboard-table" id="leaderboard">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Utilisateur</th>
+                        <th>Score</th>
+                        <th>Problèmes Résolus</th>
+                        <th>Pénalités</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr>
+                        <td colspan="5" class="loading">Chargement...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function updateLeaderboard() {
+            try {
+                const response = await fetch('/api/contest/{{ contest_id }}/leaderboard');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('leaderboard-body');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune soumission pour le moment</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map((entry, index) => {
+                    let positionClass = '';
+                    if (index === 0) positionClass = 'first-place';
+                    else if (index === 1) positionClass = 'second-place';
+                    else if (index === 2) positionClass = 'third-place';
+                    
+                    return `
+                        <tr class="${positionClass}">
+                            <td class="position">${index + 1}</td>
+                            <td class="username">${entry.user}</td>
+                            <td class="score">${entry.score}</td>
+                            <td class="solved">${entry.solved}</td>
+                            <td class="penalty">${entry.penalty}</td>
+                        </tr>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Mise à jour initiale
+        updateLeaderboard();
+        
+        // Mise à jour toutes les 2 secondes
+        setInterval(updateLeaderboard, 2000);
+    </script>
+</body>
+</html>

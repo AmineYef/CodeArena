@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejoindre Contest {{ contest_id }} - CodeArena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .badge-easy {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .badge-hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .problem-card {
+            border: 2px solid #e0e0e0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .problem-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <ul class="nav-links">
+                <li><a href="/">Accueil</a></li>
+                <li><a href="/contests">Contests</a></li>
+                <li><a href="/creator">Créer Contest</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="join-container" style="max-width: 900px; margin: 2rem auto;">
+            
+            <!-- Contest Header -->
+            <div class="contest-header-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <h1 style="margin: 0 0 0.5rem 0; font-size: 2rem;">Contest {{ contest_id }}</h1>
+                <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <span style="opacity: 0.9; font-size: 0.9rem;">⏱️ Temps restant:</span>
+                        <div id="timer" style="font-size: 2rem; font-weight: bold; margin-top: 0.25rem;">
+                            Chargement...
+                        </div>
+                    </div>
+                    <div>
+                        <span style="opacity: 0.9; font-size: 0.9rem;">📊 Difficulté:</span>
+                        <div style="font-size: 1.3rem; font-weight: bold; margin-top: 0.25rem;">
+                            {{ contest.difficulty.upper() }}
+                        </div>
+                    </div>
+                    <div>
+                        <span style="opacity: 0.9; font-size: 0.9rem;">📝 Problèmes:</span>
+                        <div style="font-size: 1.3rem; font-weight: bold; margin-top: 0.25rem;">
+                            {{ contest.num_problems }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Registration Form -->
+            <div class="registration-card" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                <h2 style="margin-top: 0; color: #333;">👤 Entrez votre nom d'utilisateur</h2>
+                <form method="POST" action="/contest/{{ contest_id }}/join" id="joinForm" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">Nom d'utilisateur</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required 
+                            minlength="3"
+                            maxlength="20"
+                            placeholder="Ex: Ali_2024"
+                            style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                        >
+                        <small style="color: #777; display: block; margin-top: 0.25rem;">Entre 3 et 20 caractères</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem; white-space: nowrap;">
+                        🚀 Rejoindre le Contest
+                    </button>
+                </form>
+            </div>
+
+            <!-- Problems List -->
+            <div class="problems-card" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                <h2 style="margin-top: 0; color: #333;">📋 Problèmes du Contest</h2>
+                <div style="display: grid; gap: 1rem;">
+                    {% for problem_id in contest.problems %}
+                    <div class="problem-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">{{ problem_id }}</h3>
+                                <p style="margin: 0; color: #666;">Cliquez sur "Rejoindre" pour voir l'énoncé complet</p>
+                            </div>
+                            <span class="badge badge-{{ contest.difficulty }}">
+                                {{ contest.difficulty }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Contest Rules -->
+            <div class="rules-card" style="background: #f8f9fa; padding: 2rem; border-radius: 12px; border-left: 4px solid #667eea;">
+                <h3 style="margin-top: 0; color: #333;">📖 Règles du Contest</h3>
+                <ul style="color: #555; line-height: 1.8; margin: 0;">
+                    <li><strong>✅ Correct (OK):</strong> +100 points</li>
+                    <li><strong>❌ Mauvaise réponse:</strong> -10 points</li>
+                    <li><strong>⏱️ Temps dépassé (Timeout):</strong> -20 points</li>
+                    <li><strong>🛠️ Erreur de compilation:</strong> -5 points</li>
+                    <li><strong>💥 Erreur d'exécution:</strong> -10 points</li>
+                    <li><strong>🏆 Le gagnant</strong> est celui qui a le plus de points à la fin du temps</li>
+                    <li><strong>🔒 Les soumissions</strong> ne seront plus acceptées après la fin du timer</li>
+                </ul>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                <a href="/contests" class="btn btn-secondary" style="padding: 0.75rem 1.5rem;">
+                    ← Retour aux Contests
+                </a>
+                <a href="/contest/{{ contest_id }}/leaderboard" class="btn btn-secondary" style="padding: 0.75rem 1.5rem;">
+                    📊 Voir le Classement
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <footer style="margin-top: 4rem; padding: 2rem 0; background: #f8f9fa; text-align: center; color: #666;">
+        <div class="container">
+            <p style="margin: 0;">CodeArena - Plateforme de Contest en Temps Réel</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Bonne chance ! 🚀</p>
+        </div>
+    </footer>
+
+    <script>
+        // Timer dynamique - corrigé
+      let remainingTime = parseInt('{{ contest.remaining_time }}');
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            
+            if (remainingTime <= 0) {
+                timerElement.innerHTML = '<span style="color: #ff4444;">Terminé ⏰</span>';
+                return;
+            }
+            
+            timerElement.textContent = formatTime(remainingTime);
+            
+            // Changer la couleur si moins de 5 minutes
+            if (remainingTime <= 300) {
+                timerElement.style.color = '#ffc107';
+            }
+            
+            // Changer la couleur si moins d'1 minute
+            if (remainingTime <= 60) {
+                timerElement.style.color = '#ff4444';
+            }
+            
+            remainingTime--;
+        }
+        
+        // Initialiser le timer
+        updateTimer();
+        
+        // Mise à jour toutes les secondes
+        setInterval(updateTimer, 1000);
+        
+        // Validation du formulaire
+        document.getElementById('joinForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            
+            // Vérifier la longueur
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('⚠️ Le nom d\'utilisateur doit contenir au moins 3 caractères');
+                return;
+            }
+            
+            if (username.length > 20) {
+                e.preventDefault();
+                alert('⚠️ Le nom d\'utilisateur ne peut pas dépasser 20 caractères');
+                return;
+            }
+            
+            // Vérifier que le contest n'est pas terminé
+            if (remainingTime <= 0) {
+                e.preventDefault();
+                alert('⏰ Le contest est terminé ! Les inscriptions sont fermées.');
+                return;
+            }
+            
+            // Vérifier les caractères valides (lettres, chiffres, underscore)
+            const validUsername = /^[a-zA-Z0-9_]+$/;
+            if (!validUsername.test(username)) {
+                e.preventDefault();
+                alert('⚠️ Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et underscore (_)');
+                return;
+            }
+        });
+        
+        // Focus automatique sur le champ username
+        document.getElementById('username').focus();
+    </script>
+
+</body>
+</html>

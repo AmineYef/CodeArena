@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Contest {{ contest_id }} - CodeArena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .problem-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        .problem-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .badge-easy { background: #d4edda; color: #155724; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-hard { background: #f8d7da; color: #721c24; }
+        .badge-solved { background: #4CAF50; color: white; }
+        .badge-unsolved { background: #f8f9fa; color: #666; }
+        .timer {
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <div style="color: white; font-weight: bold;">
+                    👤 {{ username }}
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/">Accueil</a></li>
+                    <li><a href="/contest/{{ contest_id }}/leaderboard">Classement</a></li>
+                    <li><a href="/contests">Autres Contests</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 style="margin: 0 0 0.5rem 0; font-size: 2rem;">Contest {{ contest_id }}</h1>
+                    <p style="opacity: 0.9; margin: 0;">Bienvenue, <strong>{{ username }}</strong> !</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="opacity: 0.9; font-size: 0.9rem;">⏱️ TEMPS RESTANT</div>
+                    <div id="timer" class="timer">Chargement...</div>
+                    <div style="opacity: 0.8; font-size: 0.9rem;">Difficulté : {{ contest.difficulty.upper() }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            <!-- Colonne gauche : Problèmes -->
+            <div>
+                <h2 style="color: #333; margin-bottom: 1.5rem;">📝 Problèmes</h2>
+                
+                {% for problem_id in contest.problems %}
+                <div class="problem-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">
+                                {{ problem_id }}
+                            </h3>
+                            <p style="margin: 0; color: #666; font-size: 0.95rem;">
+                                Cliquez pour voir l'énoncé et soumettre votre solution
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-{{ contest.difficulty }}">
+                                {{ contest.difficulty }}
+                            </span>
+                            <span class="badge badge-unsolved">
+                                Non résolu
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="/contest/{{ contest_id }}/problem/{{ problem_id }}?username={{ username }}" 
+                           class="btn btn-primary" style="padding: 0.5rem 1.5rem;">
+                            👁️ Voir l'Énoncé
+                        </a>
+                        <a href="/contest/{{ contest_id }}/problem/{{ problem_id }}?username={{ username }}" 
+                           class="btn btn-secondary" style="padding: 0.5rem 1.5rem;">
+                            💻 Soumettre Solution
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Colonne droite : Stats et Actions -->
+            <div>
+                <!-- Statistiques -->
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+                    <h3 style="margin-top: 0; color: #333; margin-bottom: 1rem;">📊 Vos Statistiques</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            <span>Problèmes résolus :</span>
+                            <strong>0/{{ contest.num_problems }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            <span>Soumissions :</span>
+                            <strong>0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            <span>Score actuel :</span>
+                            <strong>0 points</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                            <span>Position :</span>
+                            <strong>--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+                    <h3 style="margin-top: 0; color: #333; margin-bottom: 1rem;">⚡ Actions Rapides</h3>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <a href="/contest/{{ contest_id }}/leaderboard" class="btn btn-primary" style="text-align: center;">
+                            📊 Voir Classement Complet
+                        </a>
+                        <a href="/contest/{{ contest_id }}/leaderboard?username={{ username }}" class="btn btn-secondary" style="text-align: center;">
+                            🎯 Voir Ma Position
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Règles -->
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h4 style="margin-top: 0; color: #333;">📖 Règles</h4>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem; color: #555; font-size: 0.9rem;">
+                        <li>✅ OK: +100 points</li>
+                        <li>❌ Mauvaise réponse: -10 points</li>
+                        <li>⏱️ Timeout: -20 points</li>
+                        <li>💥 Erreur: -10 points</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons de navigation -->
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap;">
+            <a href="/contest/{{ contest_id }}/join" class="btn btn-secondary">
+                🔗 Inviter d'Autres
+            </a>
+            <a href="/contests" class="btn btn-secondary">
+                🏆 Voir Autres Contests
+            </a>
+        </div>
+    </div>
+
+    <footer style="margin-top: 4rem; padding: 2rem 0; background: #f8f9fa; text-align: center; color: #666;">
+        <div class="container">
+            <p style="margin: 0;">CodeArena - Plateforme de Contest en Temps Réel</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Bonne chance dans le contest ! 🚀</p>
+        </div>
+    </footer>
+
+    <script>
+        // Timer dynamique
+        let remainingTime = parseInt('{{ contest.remaining_time }}');
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            
+            if (remainingTime <= 0) {
+                timerElement.innerHTML = '<span style="color: #ff4444;">TERMINÉ ⏰</span>';
+                // Désactiver les soumissions
+                document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.pointerEvents = 'none';
+                });
+                return;
+            }
+            
+            timerElement.textContent = formatTime(remainingTime);
+            
+            // Changer la couleur si moins de 5 minutes
+            if (remainingTime <= 300) {
+                timerElement.style.color = '#ffc107';
+            }
+            
+            // Changer la couleur si moins d'1 minute
+            if (remainingTime <= 60) {
+                timerElement.style.color = '#ff4444';
+            }
+            
+            remainingTime--;
+        }
+        
+        // Initialiser le timer
+        updateTimer();
+        setInterval(updateTimer, 1000);
+        
+        // Rafraîchir automatiquement les stats toutes les 30 secondes
+        function refreshStats() {
+            // Simuler un appel API
+            fetch(`/api/contest/{{ contest_id }}/leaderboard?username={{ username }}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Mettre à jour les statistiques ici
+                    console.log('Stats mises à jour:', data);
+                });
+        }
+        
+        setInterval(refreshStats, 30000);
+        
+        // Notification de début de contest
+        if (remainingTime > 0 && remainingTime === parseInt('{{ contest.duration }}')) {
+            setTimeout(() => {
+                alert('🎯 Le contest commence maintenant ! Bonne chance !');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contest Créé - CodeArena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <ul class="nav-links">
+                <li><a href="/">Accueil</a></li>
+                <li><a href="/contests">Contests</a></li>
+                <li><a href="/creator">Créer Contest</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="success-container" style="max-width: 800px; margin: 3rem auto; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <h1 class="page-title" style="color: var(--success);">Contest Créé avec Succès !</h1>
+            
+            <div class="contest-info-card" style="background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 2rem 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left;">
+                    <div>
+                        <strong style="color: var(--text-muted);">ID du Contest:</strong>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary); margin: 0.5rem 0;">{{ contest_id }}</p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--text-muted);">Difficulté:</strong>
+                        <p style="margin: 0.5rem 0;">
+                            <span class="badge badge-{{ contest.difficulty }}">{{ contest.difficulty }}</span>
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--text-muted);">Durée:</strong>
+                        <p style="font-size: 1.2rem; margin: 0.5rem 0;">{{ (contest.duration / 60) | int }} minutes</p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--text-muted);">Nombre de problèmes:</strong>
+                        <p style="font-size: 1.2rem; margin: 0.5rem 0;">{{ contest.num_problems }}</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                    <strong style="color: var(--text-muted);">Problèmes assignés:</strong>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        {% for problem in contest.problems %}
+                        <span class="problem-tag" style="background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold;">
+                            {{ problem }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                <a href="/contest/{{ contest_id }}/join" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                    🚀 Rejoindre ce Contest
+                </a>
+                <a href="/contests" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                    📋 Voir tous les contests
+                </a>
+                <a href="/creator" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                    ➕ Créer un autre contest
+                </a>
+            </div>
+
+            <div class="info-box" style="background: #e0f2fe; padding: 1.5rem; border-radius: 8px; margin-top: 2rem; text-align: left;">
+                <h3 style="margin-top: 0;">ℹ️ Prochaines étapes</h3>
+                <ul style="margin: 0;">
+                    <li>Partagez l'ID du contest avec les participants</li>
+                    <li>Le timer démarre automatiquement</li>
+                    <li>Les participants peuvent rejoindre et soumettre leur code</li>
+                    <li>Suivez le leaderboard en temps réel</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>CodeArena - Plateforme de Contest en Temps Réel</p>
+        </div>
+    </footer>
+</body>
+</html>

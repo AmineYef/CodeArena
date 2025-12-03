@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un Contest - CodeArena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <ul class="nav-links">
+                <li><a href="/">Accueil</a></li>
+                <li><a href="/contests">Contests</a></li>
+                <li><a href="/creator" class="active">Créer Contest</a></li>
+                <li><a href="/admin/workers">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Créer un Nouveau Contest</h1>
+        
+        <div class="form-container">
+            <form method="POST" action="/creator" class="contest-form">
+                <div class="form-group">
+                    <label for="duration">Durée du contest (minutes)</label>
+                    <input type="number" id="duration" name="duration" min="5" max="180" value="15" required>
+                    <small>Entre 5 et 180 minutes</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulté</label>
+                    <select id="difficulty" name="difficulty" required>
+                        <option value="easy">Facile</option>
+                        <option value="medium" selected>Moyen</option>
+                        <option value="hard">Difficile</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="num_problems">Nombre de problèmes</label>
+                    <input type="number" id="num_problems" name="num_problems" min="1" max="10" value="3" required>
+                    <small>Entre 1 et 10 problèmes</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">🚀 Créer le Contest</button>
+                    <a href="/creator/contests" class="btn btn-secondary">Voir mes contests</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="info-box">
+            <h3>ℹ️ Informations</h3>
+            <ul>
+                <li>Les problèmes seront sélectionnés aléatoirement selon la difficulté choisie</li>
+                <li>Le timer démarrera automatiquement après la création</li>
+                <li>Les participants pourront rejoindre le contest dès sa création</li>
+                <li>Le leaderboard sera mis à jour en temps réel</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

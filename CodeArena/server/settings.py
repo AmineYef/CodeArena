@@ -68,7 +68,7 @@ LOGS_DIR = 'data/logs'
 #  Dashboard
 
 DASHBOARD_HOST = 'localhost'
-DASHBOARD_PORT = 8080
+DASHBOARD_PORT = 8000
 DASHBOARD_DEBUG = True
 
 
