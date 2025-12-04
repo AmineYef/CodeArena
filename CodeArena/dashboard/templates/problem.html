@@ -6,6 +6,71 @@
     <title>Problème {{ problem_number }} - CodeArena</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
+        /* Styles pour le markdown */
+        .problem-content h1 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .problem-content h2 {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .problem-content p {
+            margin: 1rem 0;
+            line-height: 1.8;
+        }
+        
+        .problem-content ul, .problem-content ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        .problem-content li {
+            margin: 0.5rem 0;
+        }
+        
+        .problem-content code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e83e8c;
+        }
+        
+        .problem-content pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .problem-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        
+        .problem-content strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .problem-content em {
+            color: #666;
+            font-style: italic;
+        }
+        
         .verdict-box {
             margin-top: 1rem;
             padding: 1rem;
@@ -61,7 +126,7 @@
                 </div>
 
                 <div class="problem-content">
-                    {{ statement | safe }}
+                    {{ statement | markdown | safe }}
                 </div>
             </div>
 

@@ -1,5 +1,4 @@
 
-
 # import subprocess
 # import tempfile
 # import os
@@ -7,7 +6,8 @@
 # import shutil
 # import threading
 
-# TIME_LIMIT = 2      # seconds
+# TIME_LIMIT = 2  # seconds
+
 
 # class JudgeEngine:
 
@@ -25,41 +25,53 @@
 #         input_file = os.path.join(problem_path, "input.txt")
 #         output_file = os.path.join(problem_path, "output.txt")
 
-#         # Sanity check
+#         # Check file existence
 #         if not os.path.exists(input_file):
 #             return {"verdict": "INPUT_FILE_MISSING"}
 
 #         if not os.path.exists(output_file):
 #             return {"verdict": "OUTPUT_FILE_MISSING"}
 
-#         # Temporary sandbox
 #         with tempfile.TemporaryDirectory() as tmp:
 
-#             # Copy test files
+#             # Copy tests
 #             shutil.copy(input_file, tmp + "/input.txt")
 #             shutil.copy(output_file, tmp + "/expected.txt")
 
-#             # Write user code
-#             code_path = os.path.join(tmp, "solution")
-#             with open(code_path, "w") as f:
+#             # Choose proper user code filename
+#             if language == "cpp":
+#                 code_path = os.path.join(tmp, "solution.cpp")
+#             elif language == "java":
+#                 code_path = os.path.join(tmp, "Main.java")
+#             else:  # Python
+#                 code_path = os.path.join(tmp, "solution.py")
+
+#             # Save user code
+#             with open(code_path, "w", encoding="utf-8") as f:
 #                 f.write(code)
 
-#             input_data = open(tmp + "/input.txt").read()
-#             expected = open(tmp + "/expected.txt").read().strip()
+#             # Load input & expected outputs
+#             with open(tmp + "/input.txt", encoding="utf-8") as f:
+#                 input_data = f.read()
 
-#             # Dispatch by language
+#             with open(tmp + "/expected.txt", encoding="utf-8") as f:
+#                 expected = f.read().strip()
+
+#             # Language dispatch
 #             if language == "python":
 #                 return self._run_python(code_path, input_data, expected)
 
 #             elif language == "cpp":
-#                 exe_path = os.path.join(tmp, "a.exe")
+#                 exe_path = os.path.join(tmp, "solution.exe")
 #                 return self._run_cpp(code_path, exe_path, input_data, expected)
+
+#             elif language == "java":
+#                 return self._run_java(code_path, tmp, input_data, expected)
 
 #             else:
 #                 return {"verdict": "LANGUAGE_NOT_SUPPORTED"}
 
-
-#     # ------------------ PYTHON --------------------
+#     # ------------------ PYTHON ------------------
 
 #     def _run_python(self, code_path, input_data, expected):
 #         try:
@@ -71,7 +83,6 @@
 #                 text=True
 #             )
 
-#             # timeout
 #             timer = threading.Timer(TIME_LIMIT, proc.kill)
 #             timer.start()
 
@@ -81,22 +92,15 @@
 #             if proc.returncode != 0:
 #                 return {"verdict": "RUNTIME_ERROR", "error": err.strip()}
 
-#             output = out.strip()
-
-#             if output == expected:
+#             if out.strip() == expected:
 #                 return {"verdict": "OK"}
 
-#             return {
-#                 "verdict": "WRONG_ANSWER",
-#                 "output": output,
-#                 "expected": expected
-#             }
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
 
 #         except Exception as e:
 #             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
 
-
-#     # ------------------ C++ --------------------
+#     # ------------------ C++ ------------------
 
 #     def _run_cpp(self, code_path, exe_path, input_data, expected):
 
@@ -125,21 +129,236 @@
 #             if proc.returncode != 0:
 #                 return {"verdict": "RUNTIME_ERROR", "error": err}
 
-#             output = out.strip()
-
-#             if output == expected:
+#             if out.strip() == expected:
 #                 return {"verdict": "OK"}
 
-#             return {
-#                 "verdict": "WRONG_ANSWER",
-#                 "output": output,
-#                 "expected": expected
-#             }
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+
+#         except Exception as e:
+#             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
+
+#     # ------------------ JAVA ------------------
+
+#     def _run_java(self, code_path, workdir, input_data, expected):
+#         # compile Java
+#         p = subprocess.run(["javac", code_path],
+#                            capture_output=True, text=True)
+
+#         if p.returncode != 0:
+#             return {"verdict": "COMPILATION_ERROR", "error": p.stderr}
+
+#         try:
+#             proc = subprocess.Popen(
+#                 ["java", "-cp", workdir, "Main"],
+#                 stdin=subprocess.PIPE,
+#                 stdout=subprocess.PIPE,
+#                 stderr=subprocess.PIPE,
+#                 text=True
+#             )
+
+#             timer = threading.Timer(TIME_LIMIT, proc.kill)
+#             timer.start()
+
+#             out, err = proc.communicate(input_data)
+#             timer.cancel()
+
+#             if proc.returncode != 0:
+#                 return {"verdict": "RUNTIME_ERROR", "error": err}
+
+#             if out.strip() == expected:
+#                 return {"verdict": "OK"}
+
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
 
 #         except Exception as e:
 #             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
 
 
+# import subprocess
+# import tempfile
+# import os
+# import sys
+# import shutil
+# import threading
+
+# TIME_LIMIT = 2  # seconds
+
+
+# class JudgeEngine:
+
+#     def __init__(self, problems_dir="problems"):
+#         self.problems_dir = problems_dir
+
+#     def judge(self, task):
+
+#         problem = task["problem_id"]
+#         language = task["language"]
+#         code = task["code"]
+
+#         # Paths
+#         problem_path = os.path.join(self.problems_dir, problem)
+#         input_file = os.path.join(problem_path, "input.txt")
+#         output_file = os.path.join(problem_path, "output.txt")
+
+#         # Check file existence
+#         if not os.path.exists(input_file):
+#             return {"verdict": "INPUT_FILE_MISSING"}
+
+#         if not os.path.exists(output_file):
+#             return {"verdict": "OUTPUT_FILE_MISSING"}
+
+#         with tempfile.TemporaryDirectory() as tmp:
+
+#             # Copy tests
+#             shutil.copy(input_file, tmp + "/input.txt")
+#             shutil.copy(output_file, tmp + "/expected.txt")
+
+#             # Choose proper user code filename
+#             if language == "cpp":
+#                 code_path = os.path.join(tmp, "solution.cpp")
+#             elif language == "java":
+#                 code_path = os.path.join(tmp, "Main.java")
+#             else:  # Python
+#                 code_path = os.path.join(tmp, "solution.py")
+
+#             # Save user code
+#             with open(code_path, "w", encoding="utf-8") as f:
+#                 f.write(code)
+
+#             # Load input & expected outputs
+#             with open(tmp + "/input.txt", encoding="utf-8") as f:
+#                 input_data = f.read()
+
+#             with open(tmp + "/expected.txt", encoding="utf-8") as f:
+#                 expected = f.read().strip()
+
+#             # Language dispatch
+#             if language == "python":
+#                 return self._run_python(code_path, input_data, expected)
+
+#             elif language == "cpp":
+#                 exe_path = os.path.join(tmp, "solution.exe")
+#                 return self._run_cpp(code_path, exe_path, input_data, expected)
+
+#             elif language == "java":
+#                 return self._run_java(code_path, tmp, input_data, expected)
+
+#             else:
+#                 return {"verdict": "LANGUAGE_NOT_SUPPORTED"}
+
+#     # ------------------ PYTHON ------------------
+
+#     def _run_python(self, code_path, input_data, expected):
+#         try:
+#             proc = subprocess.Popen(
+#                 [sys.executable, code_path],
+#                 stdin=subprocess.PIPE,
+#                 stdout=subprocess.PIPE,
+#                 stderr=subprocess.PIPE,
+#                 text=True
+#             )
+
+#             timer = threading.Timer(TIME_LIMIT, proc.kill)
+#             timer.start()
+
+#             out, err = proc.communicate(input_data)
+#             timer.cancel()
+
+#             if proc.returncode != 0:
+#                 return {"verdict": "RUNTIME_ERROR", "error": err.strip()}
+
+#             # Normaliser les sorties (enlever espaces blancs en début/fin de lignes)
+#             output_lines = [line.strip() for line in out.strip().split('\n')]
+#             expected_lines = [line.strip() for line in expected.strip().split('\n')]
+            
+#             if output_lines == expected_lines:
+#                 return {"verdict": "OK"}
+
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+
+#         except Exception as e:
+#             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
+
+#     # ------------------ C++ ------------------
+
+#     def _run_cpp(self, code_path, exe_path, input_data, expected):
+
+#         # compile
+#         p = subprocess.run(["g++", code_path, "-o", exe_path],
+#                            capture_output=True, text=True)
+
+#         if p.returncode != 0:
+#             return {"verdict": "COMPILATION_ERROR", "error": p.stderr}
+
+#         try:
+#             proc = subprocess.Popen(
+#                 [exe_path],
+#                 stdin=subprocess.PIPE,
+#                 stdout=subprocess.PIPE,
+#                 stderr=subprocess.PIPE,
+#                 text=True
+#             )
+
+#             timer = threading.Timer(TIME_LIMIT, proc.kill)
+#             timer.start()
+
+#             out, err = proc.communicate(input_data)
+#             timer.cancel()
+
+#             if proc.returncode != 0:
+#                 return {"verdict": "RUNTIME_ERROR", "error": err}
+
+#             # Normaliser les sorties
+#             output_lines = [line.strip() for line in out.strip().split('\n')]
+#             expected_lines = [line.strip() for line in expected.strip().split('\n')]
+            
+#             if output_lines == expected_lines:
+#                 return {"verdict": "OK"}
+
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+
+#         except Exception as e:
+#             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
+
+#     # ------------------ JAVA ------------------
+
+#     def _run_java(self, code_path, workdir, input_data, expected):
+#         # compile Java
+#         p = subprocess.run(["javac", code_path],
+#                            capture_output=True, text=True)
+
+#         if p.returncode != 0:
+#             return {"verdict": "COMPILATION_ERROR", "error": p.stderr}
+
+#         try:
+#             proc = subprocess.Popen(
+#                 ["java", "-cp", workdir, "Main"],
+#                 stdin=subprocess.PIPE,
+#                 stdout=subprocess.PIPE,
+#                 stderr=subprocess.PIPE,
+#                 text=True
+#             )
+
+#             timer = threading.Timer(TIME_LIMIT, proc.kill)
+#             timer.start()
+
+#             out, err = proc.communicate(input_data)
+#             timer.cancel()
+
+#             if proc.returncode != 0:
+#                 return {"verdict": "RUNTIME_ERROR", "error": err}
+
+#             # Normaliser les sorties
+#             output_lines = [line.strip() for line in out.strip().split('\n')]
+#             expected_lines = [line.strip() for line in expected.strip().split('\n')]
+            
+#             if output_lines == expected_lines:
+#                 return {"verdict": "OK"}
+
+#             return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+
+#         except Exception as e:
+#             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
 
 
 import subprocess
@@ -158,65 +377,101 @@ class JudgeEngine:
         self.problems_dir = problems_dir
 
     def judge(self, task):
-
-        problem = task["problem_id"]
-        language = task["language"]
-        code = task["code"]
+        """
+        Juge une soumission avec validation complète
+        
+        Returns:
+            dict avec 'verdict' et éventuellement 'error', 'output', 'expected'
+        """
+        
+        problem = task.get("problem_id")
+        language = task.get("language")
+        code = task.get("code")
+        
+        # Validation 1: Paramètres requis
+        if not all([problem, language, code]):
+            return {"verdict": "INVALID_SUBMISSION", "error": "Paramètres manquants"}
+        
+        # Validation 2: Langage supporté
+        supported_languages = ['python', 'cpp', 'java']
+        if language not in supported_languages:
+            return {
+                "verdict": "LANGUAGE_NOT_SUPPORTED",
+                "error": f"Langage '{language}' non supporté. Utilisez: {', '.join(supported_languages)}"
+            }
+        
+        # Validation 3: Code non vide
+        if len(code.strip()) == 0:
+            return {"verdict": "EMPTY_CODE", "error": "Le code est vide"}
+        
+        # Validation 4: Code trop long
+        if len(code) > 50000:
+            return {"verdict": "CODE_TOO_LONG", "error": "Le code dépasse 50000 caractères"}
 
         # Paths
         problem_path = os.path.join(self.problems_dir, problem)
+        
+        # Validation 5: Le problème existe
+        if not os.path.exists(problem_path):
+            return {"verdict": "PROBLEM_NOT_FOUND", "error": f"Problème '{problem}' introuvable"}
+        
         input_file = os.path.join(problem_path, "input.txt")
         output_file = os.path.join(problem_path, "output.txt")
 
-        # Check file existence
+        # Validation 6: Fichiers de test existent
         if not os.path.exists(input_file):
-            return {"verdict": "INPUT_FILE_MISSING"}
+            return {"verdict": "INPUT_FILE_MISSING", "error": "Fichier input.txt manquant"}
 
         if not os.path.exists(output_file):
-            return {"verdict": "OUTPUT_FILE_MISSING"}
+            return {"verdict": "OUTPUT_FILE_MISSING", "error": "Fichier output.txt manquant"}
 
+        # Créer un environnement temporaire isolé
         with tempfile.TemporaryDirectory() as tmp:
+            try:
+                # Copier les fichiers de test
+                shutil.copy(input_file, os.path.join(tmp, "input.txt"))
+                shutil.copy(output_file, os.path.join(tmp, "expected.txt"))
 
-            # Copy tests
-            shutil.copy(input_file, tmp + "/input.txt")
-            shutil.copy(output_file, tmp + "/expected.txt")
+                # Choisir le bon nom de fichier selon le langage
+                if language == "cpp":
+                    code_path = os.path.join(tmp, "solution.cpp")
+                elif language == "java":
+                    code_path = os.path.join(tmp, "Main.java")
+                else:  # Python
+                    code_path = os.path.join(tmp, "solution.py")
 
-            # Choose proper user code filename
-            if language == "cpp":
-                code_path = os.path.join(tmp, "solution.cpp")
-            elif language == "java":
-                code_path = os.path.join(tmp, "Main.java")
-            else:  # Python
-                code_path = os.path.join(tmp, "solution.py")
+                # Sauvegarder le code utilisateur
+                with open(code_path, "w", encoding="utf-8") as f:
+                    f.write(code)
 
-            # Save user code
-            with open(code_path, "w", encoding="utf-8") as f:
-                f.write(code)
+                # Charger les données de test
+                with open(os.path.join(tmp, "input.txt"), encoding="utf-8") as f:
+                    input_data = f.read()
 
-            # Load input & expected outputs
-            with open(tmp + "/input.txt", encoding="utf-8") as f:
-                input_data = f.read()
+                with open(os.path.join(tmp, "expected.txt"), encoding="utf-8") as f:
+                    expected = f.read().strip()
 
-            with open(tmp + "/expected.txt", encoding="utf-8") as f:
-                expected = f.read().strip()
+                # Dispatcher selon le langage
+                if language == "python":
+                    return self._run_python(code_path, input_data, expected)
 
-            # Language dispatch
-            if language == "python":
-                return self._run_python(code_path, input_data, expected)
+                elif language == "cpp":
+                    exe_path = os.path.join(tmp, "solution.exe")
+                    return self._run_cpp(code_path, exe_path, input_data, expected)
 
-            elif language == "cpp":
-                exe_path = os.path.join(tmp, "solution.exe")
-                return self._run_cpp(code_path, exe_path, input_data, expected)
+                elif language == "java":
+                    return self._run_java(code_path, tmp, input_data, expected)
 
-            elif language == "java":
-                return self._run_java(code_path, tmp, input_data, expected)
-
-            else:
-                return {"verdict": "LANGUAGE_NOT_SUPPORTED"}
+                else:
+                    return {"verdict": "LANGUAGE_NOT_SUPPORTED"}
+                    
+            except Exception as e:
+                return {"verdict": "SYSTEM_ERROR", "error": f"Erreur système: {str(e)}"}
 
     # ------------------ PYTHON ------------------
 
     def _run_python(self, code_path, input_data, expected):
+        """Exécute et évalue du code Python"""
         try:
             proc = subprocess.Popen(
                 [sys.executable, code_path],
@@ -229,16 +484,31 @@ class JudgeEngine:
             timer = threading.Timer(TIME_LIMIT, proc.kill)
             timer.start()
 
-            out, err = proc.communicate(input_data)
-            timer.cancel()
+            try:
+                out, err = proc.communicate(input_data, timeout=TIME_LIMIT)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                return {"verdict": "TIMEOUT", "error": f"Le programme a dépassé {TIME_LIMIT} secondes"}
+            finally:
+                timer.cancel()
 
+            # Erreur d'exécution
             if proc.returncode != 0:
-                return {"verdict": "RUNTIME_ERROR", "error": err.strip()}
+                return {"verdict": "RUNTIME_ERROR", "error": err.strip()[:1000]}
 
-            if out.strip() == expected:
+            # Normaliser les sorties (enlever espaces en début/fin de chaque ligne)
+            output_lines = [line.strip() for line in out.strip().split('\n') if line.strip()]
+            expected_lines = [line.strip() for line in expected.strip().split('\n') if line.strip()]
+            
+            # Comparer
+            if output_lines == expected_lines:
                 return {"verdict": "OK"}
 
-            return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+            return {
+                "verdict": "WRONG_ANSWER",
+                "output": out.strip()[:500],
+                "expected": expected[:500]
+            }
 
         except Exception as e:
             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
@@ -246,14 +516,28 @@ class JudgeEngine:
     # ------------------ C++ ------------------
 
     def _run_cpp(self, code_path, exe_path, input_data, expected):
+        """Compile et exécute du code C++"""
+        
+        # Phase de compilation
+        try:
+            compile_result = subprocess.run(
+                ["g++", code_path, "-o", exe_path, "-std=c++17", "-O2"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+        except subprocess.TimeoutExpired:
+            return {"verdict": "COMPILATION_ERROR", "error": "Compilation trop longue (>10s)"}
+        except FileNotFoundError:
+            return {"verdict": "SYSTEM_ERROR", "error": "Compilateur g++ non trouvé"}
 
-        # compile
-        p = subprocess.run(["g++", code_path, "-o", exe_path],
-                           capture_output=True, text=True)
+        if compile_result.returncode != 0:
+            return {
+                "verdict": "COMPILATION_ERROR",
+                "error": compile_result.stderr.strip()[:1000]
+            }
 
-        if p.returncode != 0:
-            return {"verdict": "COMPILATION_ERROR", "error": p.stderr}
-
+        # Phase d'exécution
         try:
             proc = subprocess.Popen(
                 [exe_path],
@@ -266,16 +550,29 @@ class JudgeEngine:
             timer = threading.Timer(TIME_LIMIT, proc.kill)
             timer.start()
 
-            out, err = proc.communicate(input_data)
-            timer.cancel()
+            try:
+                out, err = proc.communicate(input_data, timeout=TIME_LIMIT)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                return {"verdict": "TIMEOUT", "error": f"Le programme a dépassé {TIME_LIMIT} secondes"}
+            finally:
+                timer.cancel()
 
             if proc.returncode != 0:
-                return {"verdict": "RUNTIME_ERROR", "error": err}
+                return {"verdict": "RUNTIME_ERROR", "error": err.strip()[:1000]}
 
-            if out.strip() == expected:
+            # Normaliser et comparer
+            output_lines = [line.strip() for line in out.strip().split('\n') if line.strip()]
+            expected_lines = [line.strip() for line in expected.strip().split('\n') if line.strip()]
+            
+            if output_lines == expected_lines:
                 return {"verdict": "OK"}
 
-            return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+            return {
+                "verdict": "WRONG_ANSWER",
+                "output": out.strip()[:500],
+                "expected": expected[:500]
+            }
 
         except Exception as e:
             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
@@ -283,13 +580,28 @@ class JudgeEngine:
     # ------------------ JAVA ------------------
 
     def _run_java(self, code_path, workdir, input_data, expected):
-        # compile Java
-        p = subprocess.run(["javac", code_path],
-                           capture_output=True, text=True)
+        """Compile et exécute du code Java"""
+        
+        # Phase de compilation
+        try:
+            compile_result = subprocess.run(
+                ["javac", code_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+        except subprocess.TimeoutExpired:
+            return {"verdict": "COMPILATION_ERROR", "error": "Compilation trop longue (>10s)"}
+        except FileNotFoundError:
+            return {"verdict": "SYSTEM_ERROR", "error": "Compilateur javac non trouvé"}
 
-        if p.returncode != 0:
-            return {"verdict": "COMPILATION_ERROR", "error": p.stderr}
+        if compile_result.returncode != 0:
+            return {
+                "verdict": "COMPILATION_ERROR",
+                "error": compile_result.stderr.strip()[:1000]
+            }
 
+        # Phase d'exécution
         try:
             proc = subprocess.Popen(
                 ["java", "-cp", workdir, "Main"],
@@ -302,16 +614,29 @@ class JudgeEngine:
             timer = threading.Timer(TIME_LIMIT, proc.kill)
             timer.start()
 
-            out, err = proc.communicate(input_data)
-            timer.cancel()
+            try:
+                out, err = proc.communicate(input_data, timeout=TIME_LIMIT)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                return {"verdict": "TIMEOUT", "error": f"Le programme a dépassé {TIME_LIMIT} secondes"}
+            finally:
+                timer.cancel()
 
             if proc.returncode != 0:
-                return {"verdict": "RUNTIME_ERROR", "error": err}
+                return {"verdict": "RUNTIME_ERROR", "error": err.strip()[:1000]}
 
-            if out.strip() == expected:
+            # Normaliser et comparer
+            output_lines = [line.strip() for line in out.strip().split('\n') if line.strip()]
+            expected_lines = [line.strip() for line in expected.strip().split('\n') if line.strip()]
+            
+            if output_lines == expected_lines:
                 return {"verdict": "OK"}
 
-            return {"verdict": "WRONG_ANSWER", "output": out.strip(), "expected": expected}
+            return {
+                "verdict": "WRONG_ANSWER",
+                "output": out.strip()[:500],
+                "expected": expected[:500]
+            }
 
         except Exception as e:
             return {"verdict": "SYSTEM_ERROR", "error": str(e)}
