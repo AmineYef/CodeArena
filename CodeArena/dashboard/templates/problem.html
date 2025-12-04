@@ -3,8 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ meta.title }} - CodeArena</title>
+    <title>Problème {{ problem_number }} - CodeArena</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .verdict-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+        .verdict-ok {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        .verdict-wrong {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        .verdict-timeout {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+        .verdict-error {
+            background: #fee;
+            border: 2px solid #f00;
+            color: #c00;
+        }
+        .verdict-pending {
+            background: #e7f3ff;
+            border: 2px solid #0066cc;
+            color: #004085;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -22,7 +56,7 @@
             <!-- Colonne gauche : Énoncé -->
             <div class="problem-statement">
                 <div class="problem-header">
-                    <h1>{{ meta.title }}</h1>
+                    <h1>Problème {{ problem_number }}</h1>
                     <span class="badge badge-{{ meta.difficulty }}">{{ meta.difficulty }}</span>
                 </div>
 
@@ -45,11 +79,11 @@
                 <textarea id="code-editor" class="code-editor" placeholder="// Écrivez votre code ici..."></textarea>
 
                 <div class="editor-actions">
-                    <button id="submit-btn" class="btn btn-primary">Soumettre</button>
-                    <button id="clear-btn" class="btn btn-secondary">Effacer</button>
+                    <button id="submit-btn" class="btn btn-primary">📤 Soumettre</button>
+                    <button id="clear-btn" class="btn btn-secondary">🗑️ Effacer</button>
                 </div>
 
-                <div id="result" class="result-box" style="display: none;"></div>
+                <div id="verdict-box" class="verdict-box"></div>
             </div>
         </div>
     </div>
@@ -59,17 +93,32 @@
         const clearBtn = document.getElementById('clear-btn');
         const codeEditor = document.getElementById('code-editor');
         const languageSelect = document.getElementById('language');
-        const resultBox = document.getElementById('result');
+        const verdictBox = document.getElementById('verdict-box');
+
+        let currentSubmissionId = null;
 
         submitBtn.addEventListener('click', async () => {
             const code = codeEditor.value.trim();
             if (!code) {
-                alert('Veuillez écrire du code avant de soumettre.');
+                alert('⚠️ Veuillez écrire du code avant de soumettre.');
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Envoi en cours...';
+            submitBtn.textContent = '⏳ Envoi en cours...';
+
+            // Afficher le statut "en cours"
+            verdictBox.style.display = 'block';
+            verdictBox.className = 'verdict-box verdict-pending';
+            verdictBox.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="animation: spin 1s linear infinite;">⏳</div>
+                    <div>
+                        <strong>Soumission en cours d'évaluation...</strong><br>
+                        <small>Veuillez patienter quelques secondes</small>
+                    </div>
+                </div>
+            `;
 
             try {
                 const response = await fetch('/api/submit', {
@@ -79,40 +128,138 @@
                         username: '{{ username }}',
                         problem_id: '{{ problem_id }}',
                         language: languageSelect.value,
-                        code: code
+                        code: code,
+                        contest_id: '{{ contest_id }}'
                     })
                 });
 
                 const data = await response.json();
                 
-                resultBox.style.display = 'block';
                 if (data.success) {
-                    resultBox.className = 'result-box success';
-                    resultBox.innerHTML = `
-                        <h3>✅ Soumission reçue</h3>
-                        <p>ID: ${data.submission_id}</p>
-                        <p>Votre code est en cours d'évaluation...</p>
-                    `;
+                    currentSubmissionId = data.submission_id;
+                    
+                    // Attendre le verdict
+                    checkVerdict();
                 } else {
-                    resultBox.className = 'result-box error';
-                    resultBox.innerHTML = `<h3>❌ Erreur</h3><p>${data.error}</p>`;
+                    showError(data.error || 'Erreur inconnue');
                 }
             } catch (error) {
-                resultBox.style.display = 'block';
-                resultBox.className = 'result-box error';
-                resultBox.innerHTML = `<h3>❌ Erreur</h3><p>${error.message}</p>`;
+                showError('Erreur de connexion: ' + error.message);
             }
 
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Soumettre';
+            submitBtn.textContent = '📤 Soumettre';
         });
 
+        async function checkVerdict() {
+            if (!currentSubmissionId) return;
+
+            try {
+                const response = await fetch(`/api/submission/${currentSubmissionId}/status`);
+                const data = await response.json();
+
+                if (data.status === 'pending') {
+                    // Réessayer après 1 seconde
+                    setTimeout(checkVerdict, 1000);
+                } else {
+                    // Afficher le verdict final
+                    displayVerdict(data.verdict || data.status);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                setTimeout(checkVerdict, 1000);
+            }
+        }
+
+        function displayVerdict(verdict) {
+            verdictBox.style.display = 'block';
+
+            const verdictMessages = {
+                'OK': {
+                    className: 'verdict-ok',
+                    icon: '✅',
+                    title: 'Accepté !',
+                    message: 'Votre solution est correcte. +100 points'
+                },
+                'WRONG_ANSWER': {
+                    className: 'verdict-wrong',
+                    icon: '❌',
+                    title: 'Mauvaise Réponse',
+                    message: 'Votre solution ne produit pas la bonne sortie. -10 points'
+                },
+                'TIMEOUT': {
+                    className: 'verdict-timeout',
+                    icon: '⏱️',
+                    title: 'Temps Dépassé',
+                    message: 'Votre programme prend trop de temps. -20 points'
+                },
+                'RUNTIME_ERROR': {
+                    className: 'verdict-error',
+                    icon: '💥',
+                    title: 'Erreur d\'Exécution',
+                    message: 'Votre programme a planté. -10 points'
+                },
+                'COMPILATION_ERROR': {
+                    className: 'verdict-error',
+                    icon: '🔧',
+                    title: 'Erreur de Compilation',
+                    message: 'Votre code ne compile pas. -5 points'
+                }
+            };
+
+            const info = verdictMessages[verdict] || {
+                className: 'verdict-error',
+                icon: '❓',
+                title: 'Erreur',
+                message: verdict
+            };
+
+            verdictBox.className = 'verdict-box ' + info.className;
+            verdictBox.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 3rem;">${info.icon}</div>
+                    <div>
+                        <strong style="font-size: 1.2rem;">${info.title}</strong><br>
+                        <span>${info.message}</span>
+                    </div>
+                </div>
+            `;
+
+            // Notifier l'utilisateur
+            if (verdict === 'OK') {
+                setTimeout(() => {
+                    if (confirm('✅ Problème résolu ! Voulez-vous retourner au dashboard ?')) {
+                        window.location.href = '/contest/{{ contest_id }}/dashboard?username={{ username }}';
+                    }
+                }, 1500);
+            }
+        }
+
+        function showError(message) {
+            verdictBox.style.display = 'block';
+            verdictBox.className = 'verdict-box verdict-error';
+            verdictBox.innerHTML = `
+                <strong>❌ Erreur</strong><br>
+                ${message}
+            `;
+        }
+
         clearBtn.addEventListener('click', () => {
-            if (confirm('Effacer tout le code ?')) {
+            if (confirm('🗑️ Effacer tout le code ?')) {
                 codeEditor.value = '';
-                resultBox.style.display = 'none';
+                verdictBox.style.display = 'none';
             }
         });
+
+        // Animation de rotation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

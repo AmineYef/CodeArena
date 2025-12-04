@@ -35,6 +35,19 @@
             border-color: #667eea;
             box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
         }
+        .problem-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -105,11 +118,12 @@
             <div class="problems-card" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
                 <h2 style="margin-top: 0; color: #333;">📋 Problèmes du Contest</h2>
                 <div style="display: grid; gap: 1rem;">
-                    {% for problem_id in contest.problems %}
+                    {% for i in range(contest.num_problems) %}
                     <div class="problem-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                            <div>
-                                <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">{{ problem_id }}</h3>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div class="problem-number">{{ i + 1 }}</div>
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">Problème {{ i + 1 }}</h3>
                                 <p style="margin: 0; color: #666;">Cliquez sur "Rejoindre" pour voir l'énoncé complet</p>
                             </div>
                             <span class="badge badge-{{ contest.difficulty }}">
@@ -156,8 +170,7 @@
     </footer>
 
     <script>
-        // Timer dynamique - corrigé
-      let remainingTime = parseInt('{{ contest.remaining_time }}');
+        let remainingTime = parseInt('{{ contest.remaining_time }}');
         
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
@@ -175,12 +188,10 @@
             
             timerElement.textContent = formatTime(remainingTime);
             
-            // Changer la couleur si moins de 5 minutes
             if (remainingTime <= 300) {
                 timerElement.style.color = '#ffc107';
             }
             
-            // Changer la couleur si moins d'1 minute
             if (remainingTime <= 60) {
                 timerElement.style.color = '#ff4444';
             }
@@ -188,17 +199,12 @@
             remainingTime--;
         }
         
-        // Initialiser le timer
         updateTimer();
-        
-        // Mise à jour toutes les secondes
         setInterval(updateTimer, 1000);
         
-        // Validation du formulaire
         document.getElementById('joinForm').addEventListener('submit', function(e) {
             const username = document.getElementById('username').value.trim();
             
-            // Vérifier la longueur
             if (username.length < 3) {
                 e.preventDefault();
                 alert('⚠️ Le nom d\'utilisateur doit contenir au moins 3 caractères');
@@ -211,14 +217,12 @@
                 return;
             }
             
-            // Vérifier que le contest n'est pas terminé
             if (remainingTime <= 0) {
                 e.preventDefault();
                 alert('⏰ Le contest est terminé ! Les inscriptions sont fermées.');
                 return;
             }
             
-            // Vérifier les caractères valides (lettres, chiffres, underscore)
             const validUsername = /^[a-zA-Z0-9_]+$/;
             if (!validUsername.test(username)) {
                 e.preventDefault();
@@ -227,7 +231,6 @@
             }
         });
         
-        // Focus automatique sur le champ username
         document.getElementById('username').focus();
     </script>
 

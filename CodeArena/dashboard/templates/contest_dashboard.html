@@ -27,6 +27,19 @@
             box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
             transform: translateY(-2px);
         }
+        .problem-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
         .badge {
             padding: 0.5rem 1rem;
             border-radius: 20px;
@@ -52,7 +65,7 @@
         <div class="container">
             <h1 class="logo">🏆 CodeArena</h1>
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <div style="color: white; font-weight: bold;">
+                <div style="color: #667eea; font-weight: bold;">
                     👤 {{ username }}
                 </div>
                 <ul class="nav-links">
@@ -84,12 +97,13 @@
             <div>
                 <h2 style="color: #333; margin-bottom: 1.5rem;">📝 Problèmes</h2>
                 
-                {% for problem_id in contest.problems %}
+                {% for problem in problems_numbered %}
                 <div class="problem-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <div>
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <div class="problem-number">{{ problem.number }}</div>
+                        <div style="flex: 1;">
                             <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">
-                                {{ problem_id }}
+                                Problème {{ problem.number }}
                             </h3>
                             <p style="margin: 0; color: #666; font-size: 0.95rem;">
                                 Cliquez pour voir l'énoncé et soumettre votre solution
@@ -106,11 +120,11 @@
                     </div>
                     
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="/contest/{{ contest_id }}/problem/{{ problem_id }}?username={{ username }}" 
+                        <a href="/contest/{{ contest_id }}/problem/{{ problem.number }}?username={{ username }}" 
                            class="btn btn-primary" style="padding: 0.5rem 1.5rem;">
                             👁️ Voir l'Énoncé
                         </a>
-                        <a href="/contest/{{ contest_id }}/problem/{{ problem_id }}?username={{ username }}" 
+                        <a href="/contest/{{ contest_id }}/problem/{{ problem.number }}?username={{ username }}" 
                            class="btn btn-secondary" style="padding: 0.5rem 1.5rem;">
                             💻 Soumettre Solution
                         </a>
@@ -127,19 +141,19 @@
                     <div style="display: grid; gap: 1rem;">
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Problèmes résolus :</span>
-                            <strong>0/{{ contest.num_problems }}</strong>
+                            <strong id="user-solved">0/{{ contest.num_problems }}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Soumissions :</span>
-                            <strong>0</strong>
+                            <strong id="user-submissions">0</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Score actuel :</span>
-                            <strong>0 points</strong>
+                            <strong id="user-score">0 points</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
                             <span>Position :</span>
-                            <strong>--</strong>
+                            <strong id="user-position">--</strong>
                         </div>
                     </div>
                 </div>
@@ -151,9 +165,9 @@
                         <a href="/contest/{{ contest_id }}/leaderboard" class="btn btn-primary" style="text-align: center;">
                             📊 Voir Classement Complet
                         </a>
-                        <a href="/contest/{{ contest_id }}/leaderboard?username={{ username }}" class="btn btn-secondary" style="text-align: center;">
-                            🎯 Voir Ma Position
-                        </a>
+                        <button onclick="refreshStats()" class="btn btn-secondary" style="text-align: center;">
+                            🔄 Rafraîchir Statistiques
+                        </button>
                     </div>
                 </div>
 
@@ -168,16 +182,6 @@
                     </ul>
                 </div>
             </div>
-        </div>
-
-        <!-- Boutons de navigation -->
-        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap;">
-            <a href="/contest/{{ contest_id }}/join" class="btn btn-secondary">
-                🔗 Inviter d'Autres
-            </a>
-            <a href="/contests" class="btn btn-secondary">
-                🏆 Voir Autres Contests
-            </a>
         </div>
     </div>
 
@@ -203,7 +207,6 @@
             
             if (remainingTime <= 0) {
                 timerElement.innerHTML = '<span style="color: #ff4444;">TERMINÉ ⏰</span>';
-                // Désactiver les soumissions
                 document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
                     btn.style.opacity = '0.5';
                     btn.style.pointerEvents = 'none';
@@ -213,12 +216,10 @@
             
             timerElement.textContent = formatTime(remainingTime);
             
-            // Changer la couleur si moins de 5 minutes
             if (remainingTime <= 300) {
                 timerElement.style.color = '#ffc107';
             }
             
-            // Changer la couleur si moins d'1 minute
             if (remainingTime <= 60) {
                 timerElement.style.color = '#ff4444';
             }
@@ -230,25 +231,27 @@
         updateTimer();
         setInterval(updateTimer, 1000);
         
-        // Rafraîchir automatiquement les stats toutes les 30 secondes
+        // Rafraîchir les statistiques
         function refreshStats() {
-            // Simuler un appel API
-            fetch(`/api/contest/{{ contest_id }}/leaderboard?username={{ username }}`)
+            fetch(`/api/contest/{{ contest_id }}/leaderboard`)
                 .then(response => response.json())
                 .then(data => {
-                    // Mettre à jour les statistiques ici
-                    console.log('Stats mises à jour:', data);
-                });
+                    const userEntry = data.find(entry => entry.user === '{{ username }}');
+                    
+                    if (userEntry) {
+                        document.getElementById('user-score').textContent = userEntry.score + ' points';
+                        document.getElementById('user-solved').textContent = userEntry.solved + '/{{ contest.num_problems }}';
+                        
+                        const position = data.findIndex(entry => entry.user === '{{ username }}') + 1;
+                        document.getElementById('user-position').textContent = position;
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
         }
         
-        setInterval(refreshStats, 30000);
-        
-        // Notification de début de contest
-        if (remainingTime > 0 && remainingTime === parseInt('{{ contest.duration }}')) {
-            setTimeout(() => {
-                alert('🎯 Le contest commence maintenant ! Bonne chance !');
-            }, 1000);
-        }
+        // Rafraîchir automatiquement toutes les 10 secondes
+        setInterval(refreshStats, 10000);
+        refreshStats();
     </script>
 </body>
 </html>

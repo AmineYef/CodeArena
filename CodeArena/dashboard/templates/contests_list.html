@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Contests - CodeArena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">🏆 CodeArena</h1>
+            <ul class="nav-links">
+                <li><a href="/">Accueil</a></li>
+                <li><a href="/contests" class="active">Contests</a></li>
+                <li><a href="/creator">Créer Contest</a></li>
+                <li><a href="/admin/workers">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">📋 Contests Disponibles</h1>
+
+        {% if contests %}
+        <div class="contests-grid">
+            {% for contest_id, contest in contests.items() %}
+            <div class="contest-card">
+                <div class="contest-header">
+                    <span class="contest-id">Contest {{ contest_id }}</span>
+                    <span class="badge {% if contest.active %}badge-{{ contest.difficulty }}{% else %}badge-inactive{% endif %}">
+                        {% if contest.active %}{{ contest.difficulty }}{% else %}Terminé{% endif %}
+                    </span>
+                </div>
+
+                <div class="contest-info">
+                    <span>⏱️ {{ (contest.duration / 60) | int }} min</span>
+                    <span>📝 {{ contest.num_problems }} problèmes</span>
+                </div>
+
+                <div class="contest-problems">
+                    <strong>Problèmes :</strong>
+                    {% for i in range(contest.num_problems) %}
+                    <span class="problem-tag">Problème {{ i + 1 }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="contest-footer">
+                    <a href="/contest/{{ contest_id }}/join" class="btn btn-primary">
+                        🚀 Rejoindre
+                    </a>
+                    <a href="/contest/{{ contest_id }}/leaderboard" class="btn btn-secondary">
+                        📊 Classement
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 4rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+            <h2>Aucun contest disponible pour le moment</h2>
+            <p style="color: var(--text-muted); margin-top: 1rem;">
+                Créez votre premier contest ou attendez qu'un organisateur en crée un.
+            </p>
+            <a href="/creator" class="btn btn-primary" style="margin-top: 2rem;">
+                ➕ Créer un Contest
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>CodeArena - Plateforme de Contest en Temps Réel</p>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-refresh toutes les 5 secondes
+        setInterval(() => {
+            location.reload();
+        }, 5000);
+    </script>
+</body>
+</html>
