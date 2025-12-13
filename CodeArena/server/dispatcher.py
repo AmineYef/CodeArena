@@ -18,14 +18,14 @@ class Dispatcher:
             if item is None:
                 continue
 
-            # 🔥 item = (task, socket)
+            #item = (task, socket)
             task, client_socket = item
 
             result = self.pool.execute(task)
 
-            # leaderboard
+            #leaderboard
             self.leaderboard.update(task["username"], result["verdict"])
 
-            # 🔥 ENVOI DU VERDICT
+            #ENVOI DU VERDICT
             client_socket.send((result["verdict"] + "\n").encode())
 

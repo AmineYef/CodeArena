@@ -49,14 +49,45 @@
         .badge-easy { background: #d4edda; color: #155724; }
         .badge-medium { background: #fff3cd; color: #856404; }
         .badge-hard { background: #f8d7da; color: #721c24; }
-        .badge-solved { background: #4CAF50; color: white; }
-        .badge-unsolved { background: #f8f9fa; color: #666; }
+        .badge-solved { 
+            background: #4CAF50; 
+            color: white; 
+            border: 2px solid #2E7D32;
+        }
+        .badge-unsolved { 
+            background: #f8f9fa; 
+            color: #666; 
+            border: 2px solid #ddd;
+        }
         .timer {
             font-family: 'Courier New', monospace;
             font-size: 2.5rem;
             font-weight: bold;
             text-align: center;
             margin: 1rem 0;
+        }
+        .solved-icon {
+            color: #4CAF50;
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        .unsolved-icon {
+            color: #666;
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        .attempts-badge {
+            background: #6c757d;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        .disabled-btn {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -103,32 +134,72 @@
                         <div class="problem-number">{{ problem.number }}</div>
                         <div style="flex: 1;">
                             <h3 style="margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.3rem;">
+                                {% if problem.solved %}
+                                    <span class="solved-icon">✅</span>
+                                {% else %}
+                                    <span class="unsolved-icon">❓</span>
+                                {% endif %}
                                 Problème {{ problem.number }}
+                                {% if problem.solved %}
+                                    <span style="color: #4CAF50; font-size: 1rem;">(Résolu)</span>
+                                {% endif %}
+                                {% if problem.attempts %}
+                                <span class="attempts-badge" title="Nombre de tentatives">
+                                    🔄 {{ problem.attempts }}
+                                </span>
+                                {% endif %}
                             </h3>
                             <p style="margin: 0; color: #666; font-size: 0.95rem;">
-                                Cliquez pour voir l'énoncé et soumettre votre solution
+                                {% if problem.solved %}
+                                
+                                {% else %}
+                                    Cliquez pour voir l'énoncé et soumettre votre solution
+                                {% endif %}
                             </p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <span class="badge badge-{{ contest.difficulty }}">
                                 {{ contest.difficulty }}
                             </span>
-                            <span class="badge badge-unsolved">
-                                Non résolu
-                            </span>
+                            {% if problem.solved %}
+                                <span class="badge badge-solved">
+                                    ✅ Résolu
+                                </span>
+                            {% else %}
+                                <span class="badge badge-unsolved">
+                                    ❌ Non résolu
+                                </span>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="/contest/{{ contest_id }}/problem/{{ problem.number }}?username={{ username }}" 
-                           class="btn btn-primary" style="padding: 0.5rem 1.5rem;">
-                            👁️ Voir l'Énoncé
+                        
+                            {% if problem.solved %}
+                               
+                            {% else %}
+                            <a href="/contest/{{ contest_id }}/problem/{{ problem.number }}?username={{ username }}" 
+                           class="btn btn-primary {% if problem.solved %}disabled-btn{% endif %}" 
+                           style="padding: 0.5rem 1.5rem;">
+                                👁️ Voir l'Énoncé
+                            {% endif %}
                         </a>
+                        
+                        {% if not problem.solved %}
                         <a href="/contest/{{ contest_id }}/problem/{{ problem.number }}?username={{ username }}" 
                            class="btn btn-secondary" style="padding: 0.5rem 1.5rem;">
                             💻 Soumettre Solution
                         </a>
+                        {% else %}
+                        
+                        {% endif %}
                     </div>
+                    
+                    {% if problem.attempts and not problem.solved %}
+                    <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                        📊 Vous avez fait {{ problem.attempts }} tentative{% if problem.attempts > 1 %}s{% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -141,15 +212,25 @@
                     <div style="display: grid; gap: 1rem;">
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Problèmes résolus :</span>
-                            <strong id="user-solved">0/{{ contest.num_problems }}</strong>
+                            <strong id="user-solved">{{ user_stats.solved }}/{{ user_stats.total }}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Soumissions :</span>
-                            <strong id="user-submissions">0</strong>
+                            <strong id="user-submissions">{{ user_stats.total_attempts }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            <span>Taux de réussite :</span>
+                            <strong id="user-success-rate">
+                                {% if user_stats.total_attempts > 0 %}
+                                    {{ (user_stats.solved * 100 / user_stats.total_attempts)|round(1) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Score actuel :</span>
-                            <strong id="user-score">0 points</strong>
+                            <strong id="user-score">{{ user_stats.score }} points</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
                             <span>Position :</span>

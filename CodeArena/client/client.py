@@ -44,11 +44,9 @@ int main() {
 
 s.send((json.dumps(payload) + "\n").encode())
 
-# 🔥 Message 1
 msg1 = s.recv(4096).decode().strip()
 print(msg1)
 
-# 🔥 Message 2 (verdict)
 msg2 = s.recv(4096).decode().strip()
 print(msg2)
 
