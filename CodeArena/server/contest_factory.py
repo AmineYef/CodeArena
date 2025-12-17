@@ -19,7 +19,6 @@ class ContestFactory:
             if os.path.isdir(os.path.join(PROBLEMS_DIR, d))
         ]
 
-        # filtrer par difficulté
         filtered = []
         for p in all_problems:
             meta_path = os.path.join(PROBLEMS_DIR, p, "meta.json")

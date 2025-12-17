@@ -17,32 +17,24 @@ from collections import defaultdict
 
 app = Flask(__name__)
 
-# ========================================
-# FILTRE MARKDOWN PERSONNALISÉ
-# ========================================
 @app.template_filter('markdown')
 def markdown_filter(text):
     """Convertit le markdown en HTML"""
     return markdown.markdown(text, extensions=['extra', 'codehilite', 'fenced_code'])
 
-# ========================================
-# VARIABLES GLOBALES (partagées)
-# ========================================
 contests = {}
 active_contest_id = None
 leaderboard_instance = Leaderboard()
 queue_instance = TaskQueue()
 
-# Suivre les problèmes résolus par utilisateur
-solved_problems = {}  # {username: {contest_id: {problem_id: True}}}
+solved_problems = {}  
 
-# Suivre les tentatives par utilisateur
+
 attempts_tracking = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-# Structure: attempts_tracking[username][contest_id][problem_id] = count
 
-# Suivre les scores par utilisateur
+
 user_scores = defaultdict(lambda: defaultdict(int))
-# Structure: user_scores[username][contest_id] = score
+
 
 workers_status = [
     {"id": 1, "status": "idle", "task": None},
@@ -53,9 +45,7 @@ workers_status = [
 
 submissions_log = []
 
-# ========================================
-# FONCTIONS UTILITAIRES
-# ========================================
+
 
 def detect_language(code):
     """Détecte le langage de programmation à partir du code"""
@@ -64,21 +54,21 @@ def detect_language(code):
     
     lines = [line.strip() for line in code.split('\n')]
     
-    # Détection Python
+ 
     python_keywords = [
         'def ', 'import ', 'from ', 'print(', 'if __name__ == "__main__"',
         'elif ', 'else:', 'try:', 'except ', 'with ', 'as ', 'lambda ',
         'class ', '__init__', 'self.', 'return '
     ]
     
-    # Détection C++
+
     cpp_keywords = [
         '#include', 'using namespace', 'cout <<', 'cin >>', 'std::',
         'int main()', 'void ', 'public:', 'private:', 'class ',
         'return 0;', '<< endl', '#define '
     ]
     
-    # Détection Java
+
     java_keywords = [
         'public class', 'public static void main', 'System.out.println',
         'import java.', 'String[] args', 'public void ', 'private void ',
@@ -141,10 +131,10 @@ def update_user_score(username, contest_id, verdict):
     elif verdict in ["RUNTIME_ERROR", "COMPILATION_ERROR", "SYSTEM_ERROR"]:
         user_scores[username][contest_id] -= 10
     
-    # Score minimum = 0
+
     user_scores[username][contest_id] = max(0, user_scores[username][contest_id])
     
-    # Mettre à jour le leaderboard
+
     leaderboard_instance.update(username, verdict)
     
     return user_scores[username][contest_id]
@@ -155,19 +145,16 @@ def get_user_stats(username, contest_id):
     if not contest:
         return {"solved": 0, "total": 0, "total_attempts": 0, "score": 0}
     
-    # Compter les problèmes résolus
     solved_count = 0
     total_attempts = 0
     if username in solved_problems and contest_id in solved_problems[username]:
         solved_count = sum(1 for pid in contest['problems'] 
                           if solved_problems[username][contest_id].get(pid, False))
     
-    # Compter le total des tentatives
     if username in attempts_tracking and contest_id in attempts_tracking[username]:
         for problem_id in contest['problems']:
             total_attempts += attempts_tracking[username][contest_id].get(problem_id, 0)
     
-    # Récupérer le score
     score = user_scores[username].get(contest_id, 0)
     
     return {
@@ -179,12 +166,10 @@ def get_user_stats(username, contest_id):
 
 def calculate_user_position(username, contest_id):
     """Calcule la position de l'utilisateur dans le classement"""
-    # Récupérer tous les utilisateurs avec leurs scores
     user_scores_list = []
     for user in user_scores:
         if contest_id in user_scores[user]:
             score = user_scores[user][contest_id]
-            # Compter les problèmes résolus
             solved = 0
             if user in solved_problems and contest_id in solved_problems[user]:
                 contest_probs = contests.get(contest_id, {}).get('problems', [])
@@ -196,27 +181,19 @@ def calculate_user_position(username, contest_id):
                 'solved': solved
             })
     
-    # Trier par score décroissant, puis par problèmes résolus décroissants
     user_scores_list.sort(key=lambda x: (-x['score'], -x['solved']))
     
-    # Trouver la position
     for i, user_data in enumerate(user_scores_list):
         if user_data['user'] == username:
             return i + 1
     
     return None
 
-# ========================================
-# ROUTES - PAGE D'ACCUEIL
-# ========================================
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ========================================
-# ROUTES - CONTESTS (PARTICIPANTS)
-# ========================================
 
 @app.route('/contests')
 def contests_list():
@@ -242,7 +219,7 @@ def contest_dashboard(contest_id):
     if not contest:
         return "Contest non trouvé", 404
     
-    # Créer une version numérotée avec statut résolu et tentatives
+
     problems_numbered = []
     for idx, problem_id in enumerate(contest['problems'], 1):
         solved = is_problem_solved(username, contest_id, problem_id)
@@ -254,10 +231,8 @@ def contest_dashboard(contest_id):
             'attempts': attempts if attempts > 0 else None
         })
     
-    # Statistiques utilisateur
     stats = get_user_stats(username, contest_id)
     
-    # Calculer la position
     position = calculate_user_position(username, contest_id)
     
     return render_template('contest_dashboard.html', 
@@ -285,10 +260,9 @@ def problem_view(contest_id, problem_number):
     except (ValueError, IndexError):
         return "Problème non trouvé", 404
     
-    # Vérifier si le problème est déjà résolu
+
     already_solved = is_problem_solved(username, contest_id, problem_id)
-    
-    # Récupérer le nombre de tentatives
+
     attempts = get_attempt_count(username, contest_id, problem_id)
     
     problem_path = os.path.join('problems', problem_id)
@@ -305,7 +279,6 @@ def problem_view(contest_id, problem_number):
         with open(meta_path, 'r') as f:
             meta = json.load(f)
     
-    # Récupérer le score actuel
     stats = get_user_stats(username, contest_id)
     
     return render_template('problem.html',
@@ -329,9 +302,7 @@ def leaderboard_view(contest_id):
                          contest=contest,
                          contest_id=contest_id)
 
-# ========================================
-# ROUTES - CREATOR
-# ========================================
+
 
 @app.route('/creator', methods=['GET', 'POST'])
 def creator():
@@ -372,9 +343,6 @@ def creator():
 def creator_contests():
     return render_template('creator_contests.html', contests=contests)
 
-# ========================================
-# ROUTES - ADMIN DASHBOARD
-# ========================================
 
 @app.route('/admin/workers')
 def admin_workers():
@@ -388,9 +356,7 @@ def admin_activity():
 def admin_logs():
     return render_template('admin_logs.html')
 
-# ========================================
-# API ENDPOINTS (JSON)
-# ========================================
+
 
 @app.route('/api/contests')
 def api_contests():
@@ -405,10 +371,10 @@ def api_contest(contest_id):
 
 @app.route('/api/contest/<contest_id>/leaderboard')
 def api_leaderboard(contest_id):
-    # Créer un leaderboard avec statistiques
+
     leaderboard_data = []
     
-    # Récupérer tous les utilisateurs ayant participé à ce contest
+    
     all_users = set()
     for user in solved_problems:
         if contest_id in solved_problems[user]:
@@ -430,7 +396,7 @@ def api_leaderboard(contest_id):
             'success_rate': round((stats['solved'] * 100 / stats['total_attempts']), 1) if stats['total_attempts'] > 0 else 0
         })
     
-    # Trier par score décroissant, puis par problèmes résolus
+   
     leaderboard_data.sort(key=lambda x: (-x['score'], -x['solved'], x['total_attempts']))
     
     return jsonify(leaderboard_data)
@@ -458,39 +424,39 @@ def api_submit():
     code = data.get('code')
     contest_id = data.get('contest_id')
     
-    # Validation 1: Données manquantes
+  
     if not all([problem_id, language, code, username, contest_id]):
         return jsonify({"error": "Données manquantes"}), 400
     
-    # Validation 2: Contest existe
+  
     contest = contests.get(contest_id)
     if not contest:
         return jsonify({"error": "Contest non trouvé"}), 404
     
-    # Validation 3: Contest actif
+  
     if not contest.get('active', False):
         return jsonify({"error": "Le contest est terminé"}), 403
     
-    # Validation 4: Temps restant
+ 
     if contest.get('remaining_time', 0) <= 0:
         return jsonify({"error": "Le temps du contest est écoulé"}), 403
     
-    # Validation 5: Langage supporté
+ 
     supported_languages = ['python', 'cpp', 'java']
     if language not in supported_languages:
         return jsonify({
             "error": f"Langage '{language}' non supporté. Langages autorisés: {', '.join(supported_languages)}"
         }), 400
     
-    # Validation 6: Code non vide
+
     if len(code.strip()) == 0:
         return jsonify({"error": "Le code est vide"}), 400
     
-    # Validation 7: Code trop long
+
     if len(code) > 50000:
         return jsonify({"error": "Le code est trop long (max 50000 caractères)"}), 400
     
-    # Validation 8: Détection du langage
+
     detected_language = detect_language(code)
     if detected_language and detected_language != language:
         return jsonify({
@@ -500,19 +466,19 @@ def api_submit():
             "code": "LANGUAGE_MISMATCH"
         }), 400
     
-    # Validation 9: Problème déjà résolu
+
     if is_problem_solved(username, contest_id, problem_id):
         return jsonify({
             "warning": "Vous avez déjà résolu ce problème. Vous ne pouvez plus soumettre de solution.",
             "already_solved": True,
             "blocked": True
-        }), 403  # 403 car bloqué
+        }), 403  
     
-    # Validation 10: Problème existe dans le contest
+
     if problem_id not in contest.get('problems', []):
         return jsonify({"error": "Ce problème ne fait pas partie de ce contest"}), 404
     
-    # Incrémenter le compteur de tentatives
+
     increment_attempt(username, contest_id, problem_id)
     attempts = get_attempt_count(username, contest_id, problem_id)
     
@@ -533,7 +499,7 @@ def api_submit():
     
     submissions_log.append(submission)
     
-    # Simuler l'évaluation avec le vrai judge
+
     import threading
     
     def evaluate_submission():
@@ -551,14 +517,14 @@ def api_submit():
             result = engine.judge(task)
             verdict = result.get("verdict", "SYSTEM_ERROR")
             
-            # Mettre à jour le score de l'utilisateur
+
             update_user_score(username, contest_id, verdict)
             
-            # Si OK, marquer comme résolu
+
             if verdict == "OK":
                 mark_problem_solved(username, contest_id, problem_id)
             
-            # Mettre à jour le statut de la soumission
+
             for sub in submissions_log:
                 if sub['id'] == submission_id:
                     sub['status'] = verdict
@@ -568,19 +534,19 @@ def api_submit():
                     break
                     
         except Exception as e:
-            # En cas d'erreur système
+
             for sub in submissions_log:
                 if sub['id'] == submission_id:
                     sub['status'] = 'SYSTEM_ERROR'
                     sub['verdict'] = 'SYSTEM_ERROR'
                     sub['error'] = str(e)
                     break
-            # Mettre quand même à jour le score
+
             update_user_score(username, contest_id, "SYSTEM_ERROR")
     
     threading.Thread(target=evaluate_submission, daemon=True).start()
     
-    # Simuler un worker qui prend la tâche
+
     for worker in workers_status:
         if worker["status"] == "idle":
             worker["status"] = "running"
@@ -654,9 +620,7 @@ def api_user_position(contest_id, username):
     position = calculate_user_position(username, contest_id)
     return jsonify({"position": position})
 
-# ========================================
-# LANCEMENT DU SERVEUR
-# ========================================
+
 
 if __name__ == '__main__':
     print(f"🚀 Dashboard démarré sur http://{DASHBOARD_HOST}:{DASHBOARD_PORT}")

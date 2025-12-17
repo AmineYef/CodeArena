@@ -6,7 +6,7 @@ from server.settings import (
 
 class Leaderboard:
     def __init__(self):
-        self.scores = {}   # { username : {score, solved, penalty} }
+        self.scores = {}
         self.lock = threading.Lock()
 
     def update(self, username, verdict):

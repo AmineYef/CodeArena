@@ -32,7 +32,7 @@ def start_server():
             handler.start()
 
     except KeyboardInterrupt:
-        print("\n[SERVER] Stopping server gracefully...")
+        print("\n[SERVER] Stopping server")
         server.close()
 
 

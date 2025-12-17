@@ -197,7 +197,7 @@
                     
                     {% if problem.attempts and not problem.solved %}
                     <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
-                        📊 Vous avez fait {{ problem.attempts }} tentative{% if problem.attempts > 1 %}s{% endif %}
+                         Vous avez fait {{ problem.attempts }} tentative{% if problem.attempts > 1 %}s{% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -208,7 +208,7 @@
             <div>
                 <!-- Statistiques -->
                 <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
-                    <h3 style="margin-top: 0; color: #333; margin-bottom: 1rem;">📊 Vos Statistiques</h3>
+                    <h3 style="margin-top: 0; color: #333; margin-bottom: 1rem;"> Vos Statistiques</h3>
                     <div style="display: grid; gap: 1rem;">
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                             <span>Problèmes résolus :</span>
@@ -244,11 +244,9 @@
                     <h3 style="margin-top: 0; color: #333; margin-bottom: 1rem;">⚡ Actions Rapides</h3>
                     <div style="display: grid; gap: 0.75rem;">
                         <a href="/contest/{{ contest_id }}/leaderboard" class="btn btn-primary" style="text-align: center;">
-                            📊 Voir Classement Complet
+                             Voir Classement Complet
                         </a>
-                        <button onclick="refreshStats()" class="btn btn-secondary" style="text-align: center;">
-                            🔄 Rafraîchir Statistiques
-                        </button>
+                        
                     </div>
                 </div>
 

@@ -17,15 +17,8 @@ class Dispatcher:
             item = self.queue.pop()
             if item is None:
                 continue
-
-            #item = (task, socket)
             task, client_socket = item
-
             result = self.pool.execute(task)
-
-            #leaderboard
             self.leaderboard.update(task["username"], result["verdict"])
-
-            #ENVOI DU VERDICT
             client_socket.send((result["verdict"] + "\n").encode())
 

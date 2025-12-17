@@ -23,19 +23,13 @@ class ClientHandler(threading.Thread):
                 if not self.contest.contest_active():
                     self.socket.send(b"Contest finished\n")
                     return
-
-                # 🔥 TASK SANS SOCKET (pickle-safe)
                 task = {
                     "username": data["username"],
                     "problem_id": data["problem_id"],
                     "language": data["language"],
                     "code": data["code"],
                 }
-
-                # socket stocké à côté
                 self.queue.push((task, self.socket))
-
-                # première réponse
                 self.socket.send(b"Submission received\n")
                 return
 
